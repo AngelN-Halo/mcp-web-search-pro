@@ -1,0 +1,27 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.log
+*.pid
+.env
+.env.*
+!.env.example
+.DS_Store
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Local/editor and agent state
+.idea/
+.vscode/
+.agents/
+.codex/
+
+# Local Docker overrides
+docker-compose.override.yml

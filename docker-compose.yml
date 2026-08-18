@@ -1,0 +1,18 @@
+services:
+  mcp-web-search-pro:
+    build: .
+    image: mcp-web-search-pro:latest
+    container_name: mcp-web-search-pro
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    # IPC + shared memory avoid Chromium sandbox crashes in containers
+    shm_size: "1gb"
+    # 1 worker by default — the to_thread fix already gives concurrent non-JS tool
+    # handling within one worker. Raise to 2 only if you need more concurrent JS
+    # renders (each worker can spawn Chromium, raising memory use under load).
+    command: ["python", "server.py", "--sse", "--host", "0.0.0.0", "--port", "8082", "--workers", "1"]
+    # To enable request logging instead, use this command and add "--verbose" at the end:
+    # command: ["python", "server.py", "--sse", "--host", "0.0.0.0", "--port", "8082", "--workers", "1", "--verbose"]
