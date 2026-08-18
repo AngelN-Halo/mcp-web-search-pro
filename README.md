@@ -1,14 +1,30 @@
-# mcp-web-search-pro
+# MCP Web Search Pro
 
-The "pro" build of the MCP web-search server — adds JS-rendered fetch, PDF
-extraction, smarter article extraction, Wayback Machine fallback, and YouTube
-transcripts. Same stateless Streamable HTTP transport, no API keys required.
+An extended, self-hosted web research server for MCP-compatible clients. It
+gives an AI assistant tools for discovering web pages, extracting readable
+content, rendering JavaScript applications, using the Internet Archive when a
+page is unavailable, and reading YouTube captions.
+
+The service is designed for local or trusted-network use. It is stateless,
+requires no API keys, and exposes the MCP Streamable HTTP transport on port
+`8082`. It can run beside a lighter web-search MCP server on another port.
 
 Runs as a **separate container on port 8082** alongside the lightweight
 `mcp-web-search` (port 8081). Point clients at whichever fits the task — if pro
 ever feels sluggish, the lightweight one is still right there untouched.
 
-## Tools
+## Features
+
+- Web search through DuckDuckGo, with result limits and region selection.
+- Readable HTML extraction to Markdown with navigation and boilerplate removed.
+- Automatic PDF detection and text extraction.
+- Headless Chromium rendering for React, Vue, SPA, and other JS-heavy pages.
+- Wayback Machine snapshots for unavailable or changed pages.
+- YouTube transcripts from URLs or video IDs, with optional timestamps.
+- `/health` endpoint for container and process checks.
+- Stateless Streamable HTTP and stdio MCP transports.
+
+## MCP tools
 
 | Tool | Description |
 |------|-------------|
@@ -17,6 +33,10 @@ ever feels sluggish, the lightweight one is still right there untouched.
 | `web_fetch_js`       | Render a JS-heavy / SPA page with headless Chromium, then extract text. Use when `web_fetch` returns an empty/stub page. Slower (~5–15s). Args: `url`, `wait_ms` (0–15000, default 2500), `timeout`. |
 | `web_fetch_archive`  | Fetch the latest (or timestamped) archived snapshot of a URL from the Wayback Machine. Retries on transient 503s. Args: `url`, `timestamp` (optional `YYYYMMDDhhmm`). |
 | `youtube_transcript` | Fetch a YouTube video's transcript. Accepts a full YouTube URL or bare 11-char video id. Args: `url`, `include_timestamps` (bool, default false). |
+
+Use `web_fetch` for ordinary pages because it is faster. Use `web_fetch_js`
+when the first tool returns an empty shell or incomplete content because the
+site depends on client-side JavaScript.
 
 ## Run with Docker
 
@@ -44,11 +64,31 @@ docker compose down
 Point any MCP-compatible client at:
 
 ```
-http://<server-host>:8082/sse
+http://<server-host>:8082/mcp
 ```
 
-No headers or API keys required. The server runs in stateless mode, so clients
-that skip the MCP `initialize` handshake (e.g. llama-ui) work fine.
+No headers or API keys are required. The server runs in stateless mode.
+
+## Run locally without Docker
+
+Python 3.12 is recommended:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+playwright install --with-deps chromium
+python server.py
+```
+
+Run the HTTP transport directly with:
+
+```bash
+python server.py --sse --host 127.0.0.1 --port 8082
+```
+
+Despite the historical `--sse` option name, the HTTP implementation uses the
+stateless MCP Streamable HTTP transport.
 
 ## Performance notes
 
@@ -65,62 +105,19 @@ To change the port, edit both the `ports:` mapping and the `command:` in
 `docker-compose.yml`. To enable raw request/response logging for debugging,
 switch to the commented `--verbose` `command:` line.
 
-## Before committing or pushing
+## Validation
 
 This repository is intended to be pushed as source code and Docker build
-configuration. Before the first commit:
-
-1. Review the files that will be committed:
-
-   ```bash
-   git status --short
-   git diff -- . ':!README.md'
-   ```
-
-2. Confirm that no secrets or local state are present. Do not commit `.env`
-   files, virtual environments, caches, logs, editor settings, or local agent
-   state. The repository `.gitignore` excludes these by default.
-
-3. Validate the resolved Compose configuration:
-
-   ```bash
-   docker compose config
-   ```
-
-4. Build and smoke-test the service locally:
-
-   ```bash
-   docker compose up -d --build
-   curl http://localhost:8082/health
-   docker compose logs --tail=100
-   docker compose down
-   ```
-
-5. Review the final staged file list before committing:
-
-   ```bash
-   git diff --cached --name-status
-   git diff --cached --check
-   ```
-
-There is currently no automated test, lint, typecheck, or CI suite in this
-project. The Compose validation and health check above are the available
-project-level checks.
-
-## First Git push
-
-Run these commands from the project directory after reviewing the staged
-content. Replace the remote URL and branch name with the intended destination:
+configuration. There is currently no automated test suite. The recommended
+project checks are:
 
 ```bash
-git init
-git add .
-git diff --cached --check
-git diff --cached --name-status
-git commit -m "Initial commit: MCP web search pro"
-git branch -M main
-git remote add origin <repository-url>
-git push -u origin main
+git diff --check
+docker compose config
+docker compose up -d --build
+curl http://localhost:8082/health
+docker compose logs --tail=100
+docker compose down
 ```
 
 Do not publish this service directly to the public internet without adding
@@ -128,7 +125,7 @@ authentication or placing it behind a trusted reverse proxy. The HTTP mode
 binds to `0.0.0.0`, permits requests without API keys, and allows all origins;
 that is convenient for local MCP clients but is not an access-control layer.
 
-## Operational security notes
+## Security and operating notes
 
 - `web_fetch` and `web_fetch_js` can request arbitrary HTTP(S) URLs. Restrict
   network access or add URL/DNS safeguards if untrusted users can call the
@@ -145,3 +142,8 @@ that is convenient for local MCP clients but is not an access-control layer.
   `trafilatura`, `pypdf`, `youtube-transcript-api`, `playwright`
 - `Dockerfile` — Python 3.12-slim + Playwright Chromium
 - `docker-compose.yml` — service on port 8082 with `shm_size: 1gb`
+
+## License
+
+No license file is currently included. Add a license before accepting external
+contributions or redistributing the project.
