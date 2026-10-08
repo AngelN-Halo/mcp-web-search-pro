@@ -33,7 +33,7 @@ from urllib.parse import urlparse
 import httpx
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import TextContent, Tool
+from mcp.types import TextContent, Tool, ToolAnnotations
 
 SERVER_NAME = "web-search-pro"
 
@@ -136,6 +136,12 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="web_search",
+            annotations=ToolAnnotations(
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=True,
+            ),
             description="Search the web using DuckDuckGo. Returns a list of result titles, URLs, and snippets.",
             inputSchema={
                 "type": "object",
@@ -159,6 +165,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="web_fetch",
+            annotations=ToolAnnotations(
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=True,
+            ),
             description="Fetch a URL and return its content as Markdown. Auto-extracts text from PDFs.",
             inputSchema={
                 "type": "object",
@@ -177,6 +189,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="web_fetch_js",
+            annotations=ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=False,
+                openWorldHint=True,
+            ),
             description="Render a JavaScript-heavy web page with a real browser and return its text as Markdown.",
             inputSchema={
                 "type": "object",
@@ -202,6 +220,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="web_fetch_archive",
+            annotations=ToolAnnotations(
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=True,
+            ),
             description="Fetch an archived snapshot of a URL from the Wayback Machine. Useful for 404 or paywalled pages.",
             inputSchema={
                 "type": "object",
@@ -217,6 +241,12 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="youtube_transcript",
+            annotations=ToolAnnotations(
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=True,
+            ),
             description="Fetch the transcript (captions) of a YouTube video. Accepts a YouTube URL or video id.",
             inputSchema={
                 "type": "object",
