@@ -1,5 +1,7 @@
 # MCP Web Search Pro
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/angeln-halo-mcp-web-search-pro-1el0du?v=f453bfeab1a5f0809748a2bfba8f24a2)](https://m8ven.ai/mcp/angeln-halo-mcp-web-search-pro-1el0du?s=readme)
+
 An extended, self-hosted web research server for MCP-compatible clients. It
 gives an AI assistant tools for discovering web pages, extracting readable
 content, rendering JavaScript applications, using the Internet Archive when a
