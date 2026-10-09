@@ -40,6 +40,21 @@ Use `web_fetch` for ordinary pages because it is faster. Use `web_fetch_js`
 when the first tool returns an empty shell or incomplete content because the
 site depends on client-side JavaScript.
 
+### Tool annotations
+
+All five tools explicitly declare `readOnlyHint`, `destructiveHint`,
+`idempotentHint`, and `openWorldHint`. Search, ordinary fetch, archive fetch,
+and transcripts declare read-only, non-destructive, idempotent behavior with
+external access. Results can change between calls; idempotency describes side
+effects, not identical results.
+
+`web_fetch_js` declares `readOnlyHint: false` and `idempotentHint: false`
+conservatively because it executes third-party JavaScript, which can send
+requests or cause side effects when a page loads. It declares
+`destructiveHint: false` because the handler does not intentionally delete or
+modify resources, and `openWorldHint: true` because it accesses external sites.
+Annotations describe behavior to clients; they do not enforce access controls.
+
 ## Run with Docker
 
 ```bash
@@ -110,8 +125,19 @@ switch to the commented `--verbose` `command:` line.
 ## Validation
 
 This repository is intended to be pushed as source code and Docker build
-configuration. There is currently no automated test suite. The recommended
-project checks are:
+configuration. The automated test suite exercises all five tools, content
+extraction, error
+handling, browser cleanup, and the annotations returned by MCP tool discovery.
+External providers and browser operations are mocked, so tests do not require
+internet access or a Chromium installation. Run it after installing the Python
+dependencies:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs these tests on Python 3.12 for pushes and pull requests.
+For a local container smoke check, also run:
 
 ```bash
 git diff --check
@@ -147,5 +173,4 @@ that is convenient for local MCP clients but is not an access-control layer.
 
 ## License
 
-No license file is currently included. Add a license before accepting external
-contributions or redistributing the project.
+MIT — see [LICENSE](LICENSE).
